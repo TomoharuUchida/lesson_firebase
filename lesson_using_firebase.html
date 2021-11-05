@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>chatApp</title>
+  <link rel="stylesheet" href="css/workChat.css">
+
+</head>
+
+<body>
+  <h1>ORDER LIST</h1>
+  <!-- 料理のショーケース -->
+  <!-- 5種類のカレー画像と価格の表示 -->
+
+  <!-- 入力場所を作成しよう -->
+  <form>
+    <fieldset>
+      <legend>Input Screen</legend>
+      <!-- 注文入力フィールド -->
+      <div>
+        name: <input type="text" id="name">
+      </div>
+      <div id="orderForm">
+        <div>
+          curry:
+          <select id="curry">
+            <option value="Sri Lanka Curry">Sri Lanka Curry</option>
+            <option value="Sri Lanka Noodle Curry">Sri Lanka Noodle Curry</option>
+            <option value="Dry Curry">Dry Curry</option>
+            <option value="England Curry">England Curry</option>
+            <option value="Vegetarian Curry">Vegetarian Curry</option>
+          </select>
+        </div>
+        <div>
+          spice lebel:
+          <select id="spiceLebel">
+            <option value="Mild">Mild</option>
+            <option value="Regular">Regular</option>
+            <option value="Very spicy">Very spicy</option>
+          </select>
+        </div>
+        <div>
+          drink:
+          <select id="drink">
+            <option value="Ice tea">Ice tea</option>
+            <option value="Hot tea">Hot tea</option>
+            <option value="Lassie">Lassie</option>
+          </select>
+        </div>
+        <div>
+          <button type="button" id="addForm">ORDER</button>
+        </div>
+      </div>
+    </fieldset>
+  </form>
+  <!-- <form>
+    <fieldset>
+      <legend>Served button
+        <div>
+          <input type="text" id="documentId">
+        </div>
+        <div>
+          <button id="Served">Served</button>
+        </div>
+      </legend>
+    </fieldset>
+  </form> -->
+
+  <!-- データ出力場所 -->
+  <ul id="output"></ul>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+  <script>
+    // 日時をいい感じの形式にする関数
+    function convertFromFirestoreTimestampToDatetime(timestamp) {
+      const _d = timestamp ? new Date(timestamp * 1000) : new Date();
+      const Y = _d.getFullYear();
+      const m = (_d.getMonth() + 1).toString().padStart(2, '0');
+      const d = _d.getDate().toString().padStart(2, '0');
+      const H = _d.getHours().toString().padStart(2, '0');
+      const i = _d.getMinutes().toString().padStart(2, '0');
+      const s = _d.getSeconds().toString().padStart(2, '0');
+      return `${Y}/${m}/${d} ${H}:${i}:${s}`;
+    }
+  </script>
+  <script>
+
+  </script>
+  <!-- 以下にfirebaseのコードを貼り付けよう -->
+  <!-- firebaseサービスを使用する前に、サイトで表示されたものをコピペする firebaseのverupでエラーが出ることがある -->
+  <script type="module">
+    // Import the functions you need from the SDKs you need
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.2.0/firebase-app.js";
+    // TODO: Add SDKs for Firebase products that you want to use
+    // https://firebase.google.com/docs/web/setup#available-libraries
+
+    // collectionを作った後に記載 ここから
+    import {
+      getFirestore,
+      collection,
+      addDoc,
+      serverTimestamp,
+      onSnapshot,
+      query,
+      orderBy,
+    } from "https://www.gstatic.com/firebasejs/9.2.0/firebase-firestore.js";
+    // ここまで
+
+    // Gitのときは忘れずに削除
+    // Your web app's Firebase configuration
+    const firebaseConfig = {
+      apiKey: "",
+      authDomain: "chat-01-e1ac6.firebaseapp.com",
+      projectId: "chat-01-e1ac6",
+      storageBucket: "chat-01-e1ac6.appspot.com",
+      messagingSenderId: "347023033111",
+      appId: "1:347023033111:web:32d9da8fcb312cb9a76d52"
+    };
+
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+
+    // ここの1行もimportと一緒に記載する。appを使ってdbにデータを置くというやつ
+    const db = getFirestore(app);
+
+    let orderNumber = 1;
+
+    $("#addForm").on("click", function () {
+      // 送信時に必要な処理
+      const orderArray = [];
+      const data = {
+        orderNumber: orderNumber,
+        name: $("#name").val(),
+        curry: $("#curry").val(),
+        spiceLebel: $("#spiceLebel").val(),
+        drink: $("#drink").val(),
+        time: serverTimestamp(),
+        // serverTimestampはgoogleが用意した時間の表記処理方式
+      };
+      orderArray.push(data);
+      orderNumber++;
+      console.log(orderNumber);
+      console.log(data);
+
+      // for (let i = 0; i < quiz[0].answers.length; i++) {
+      //   answersArray.push(`<li><button value="${i}">${quiz[0].answers[i]}</button></li>`);
+      // }
+      // $('#cart').html(answersArray);
+      // console.log(order);
+      // collection,collection名を指定しないとaddDocがエラーになる
+      addDoc(collection(db, 'curry'), data);
+      // $('#text').val('');
+    });
+
+    // enterでも送信できるようにするための記述
+
+    // firestoreからのデータの取得
+    // データを取得した時点で並び替えたものを取得する
+
+    // chatapp.html内に記述してある関数
+    // 日時をいい感じの形式にする関数
+    function convertTimestampToDatetime(timestamp) {
+      const _d = timestamp ? new Date(timestamp * 1000) : new Date();
+      const Y = _d.getFullYear();
+      const m = (_d.getMonth() + 1).toString().padStart(2, "0");
+      const d = _d.getDate().toString().padStart(2, "0");
+      const H = _d.getHours().toString().padStart(2, "0");
+      const i = _d.getMinutes().toString().padStart(2, "0");
+      const s = _d.getSeconds().toString().padStart(2, "0");
+      return `${Y}/${m}/${d} ${H}:${i}:${s}`;
+    }
+
+    // データ取得条件の指定（今回は時間の新しい順に並び替えて取得）
+    // ordeByがなければ、googleのよくわからない順番で出力されてしまう
+    const q = query(collection(db, "curry"), orderBy("time", "desc"));
+
+    // onSnapshotの{}内はfirebaseのデータが動いたときに動く
+    // firestoreから取ってきたデータを使用する処理を書く場合は、全て{}内に書く必要がある
+    onSnapshot(q, (querySnapshot) => {
+      console.log(querySnapshot.docs);
+
+      // 取得したデータの取り出し(わかりやすい形に変換するための配列を用意する)
+      const dataArray = [];
+
+      // firestoreから取得したデータを繰り返し処理して、dataというオブジェクトにidと中身をまとめる
+      querySnapshot.docs.forEach(function (doc) {
+        const data = {
+          id: doc.id,
+          data: doc.data(),
+        };
+
+        // わかりやすい形のデータを入れるための配列にオブジェクトを追加する
+        dataArray.push(data);
+      });
+      console.log(dataArray);
+
+      // タグを入れるための配列を用意する
+      const tagArray = [];
+
+      // いい形の配列を繰り返し処理して
+      dataArray.forEach(function (data) {
+        // いい形の入っているオブジェクトからタグを生成して、タグを入れるための配列に追加する
+        // convertTimestampToDatetimeはタグをつけるときに呼び出す(データの取得時ではない)
+        tagArray.push(`
+          <li id="${data.id}">
+          <p>OrderNo.${data.data.orderNumber}</p>
+          <p>NAME: ${data.data.name} at ${convertTimestampToDatetime(data.data.time?.seconds)}</p>
+          <p>${data.data.curry}</p>
+          <p>${data.data.spiceLebel}</p>
+          <p>${data.data.drink}</p>
+          <div id="Served"><button type=button>Served</button></div>
+          <div id="undo"><button type=button>Undo</button></div>
+          </li>
+          `);
+      });
+      $("#output").html(tagArray);
+
+    });
+
+    // 配膳済にするボタンを押した時の処理
+    $(document).on('click', "#Served", function () {
+      const docid = $(this).parent().attr('id')
+      $('#' + docid).css('background', 'green');
+      // const docRef = firebase.firestore.collection('curry').doc('docid');
+      // docRef.set({ state: 'served' });
+
+    });
+
+    // 元に戻すボタンを押した時の処理
+    $(document).on('click', "#undo", function () {
+      // const documentId = $('#documentId').val();
+      // const docRef = firebase.firestore.collection('curry').doc('documentId');
+      // docRef.set({ state: 'served' });
+      // console.log(data.id);
+      const docid = $(this).parent().attr('id')
+      $('#' + docid).css('background', 'lightblue');
+    });
+
+
+
+  </script>
+
+</body>
+
+</html>
